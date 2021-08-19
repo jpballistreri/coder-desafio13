@@ -65,17 +65,13 @@ myWSServer.on("connection", function (socket) {
   });
 
   socket.on("nuevo-mensaje", (email, texto) => {
-    console.log("Nuevo Mensaje!");
-    console.log(email);
-    console.log(texto);
-
     function validateEmail(email) {
       const re = /\S+@\S+\.\S+/;
       return re.test(email);
     }
 
     if (validateEmail(email) == false) {
-      myWSServer.emit("mensaje-error", {
+      socket.emit("mensaje-error", {
         msj: "Por favor, ingrese un Email válido.",
       });
     } else {
