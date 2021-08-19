@@ -1,0 +1,15 @@
+h2 Ingrese producto
+form(id="formularioIngreso")
+    div(class="form-group")
+        label(for="titulo_producto")
+        input(id='titulo_producto' class="form-control" type="text" placeholder="Ej: Guitarra Fender Stratocaster 1975")
+    div(class="form-group")
+        label(for="precio_producto") Ingrese el precio del producto
+        input(id="precio_producto" class="form-control" type="number" placeholder="ingrese precio")
+        small(id="precio_help" class="form-text text-muted") Precio en dolares estadounidenses
+    div(class="form-group")
+        label(for="thumbnail") Ingrese url de la imagen del producto
+        input(id="thumbnail" class="form-control" type="text" placeholder="ingrese url de imagen")
+    
+    button(onclick="enviarFormulario(event)" id="submitButton" type="submit" class="btn btn-default") Submit
+p(id="mensaje")
