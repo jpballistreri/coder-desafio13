@@ -4,22 +4,38 @@
 const socket = io.connect("http://localhost:8080", { forceNew: true });
 
 // Cuando arrancamos pedimos la data que hay actualmente enviando un socket
-socket.emit("askData");
+socket.emit("get-productos");
+socket.emit("get-mensajes");
 
-function limpiarForm() {
+function limpiarForms() {
   document.getElementById("titulo_producto").value = "";
   document.getElementById("precio_producto").value = "";
   document.getElementById("thumbnail").value = "";
+  document.getElementById("mensajeEmail").value = "";
+  document.getElementById("mensajeTexto").value = "";
 }
-
+//Limpia los formularios al cargar la pagina
 window.onload = function () {
-  limpiarForm();
+  limpiarForms();
 };
 
-function render(data) {
+function renderMensajes(data) {
+  let html = data
+    .map(function (elem, index) {
+      return `<p>
+              <span class="messageEmail">${elem.email}</span>  
+              <span class="messageDate">${elem.date}</span>
+              <span class="messageText">${elem.texto}</span>
+              </p>`;
+    })
+    .join(" ");
+  document.getElementById("mensajes").innerHTML = html;
+}
+
+function renderProductos(data) {
   data.reverse();
 
-  var html = data
+  let html = data
     .map(function (elem, index) {
       return `
                 <tr>
@@ -35,29 +51,41 @@ function render(data) {
   document.getElementById("productos").innerHTML = html;
 }
 
-socket.on("listaProductos", function (data) {
+socket.on("array-productos", function (data) {
   console.log("RECIBI LISTA");
-  render(data);
+  console.log(data);
+  renderProductos(data);
+});
+socket.on("array-mensajes", function (data) {
+  console.log("RECIBI MENSAJES");
+  console.log(data);
+  renderMensajes(data);
+});
+socket.on("mensaje-error", (res) => {
+  alert(res.msj);
+});
+socket.on("mensaje-enviado", (data) => {
+  renderMensajes(data);
 });
 
 //////////////////////77
-////FORMULARIO DE INGRESO
+////FORMULARIO DE INGRESO PRODUCTO
 
-function limpiarMensaje() {
-  var mensaje = document.getElementById("mensaje");
-
-  setTimeout(() => {
-    socket.emit("nuevo-producto");
-    mensaje.textContent = "";
-  }, 1500);
-}
+//function limpiarMsjIngresoProducto() {
+//  var mensaje = document.getElementById("msjIngresoProducto");
+//
+//  setTimeout(() => {
+//    socket.emit("nuevo-producto");
+//    mensaje.textContent = "";
+//  }, 1500);
+//}
 
 function enviarFormulario(e) {
   e.preventDefault();
-  var title = document.getElementById("titulo_producto").value;
-  var price = Number(document.getElementById("precio_producto").value);
-  var thumbnail = document.getElementById("thumbnail").value;
-  var mensaje = document.getElementById("mensaje");
+  let title = document.getElementById("titulo_producto").value;
+  let price = Number(document.getElementById("precio_producto").value);
+  let thumbnail = document.getElementById("thumbnail").value;
+  //let mensaje = document.getElementById("msjIngresoProducto");
 
   fetch("/api/productos/guardar", {
     method: "POST",
@@ -65,6 +93,16 @@ function enviarFormulario(e) {
     headers: { "content-type": "application/json" },
   })
     .then((res) => res.json())
-    .then((res) => (mensaje.innerText = res.msj), limpiarMensaje());
+    .then((res) => (socket.emit("nuevo-producto"), alert(res.msj)));
   console.log(JSON.stringify({ title, price, thumbnail }));
+}
+/////////////////
+///////////FORMULARIO INGRESO MENSAJE
+function enviarMensaje(e) {
+  e.preventDefault();
+  let email = document.getElementById("mensajeEmail").value;
+  let texto = document.getElementById("mensajeTexto").value;
+  console.log(email, texto);
+  socket.emit("nuevo-mensaje", email, texto);
+  document.getElementById("mensajeTexto").value = "";
 }

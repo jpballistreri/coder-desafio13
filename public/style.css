@@ -3,9 +3,24 @@ li {
   width: 300px;
   margin: 4px;
   padding: 4px;
-  list-style: none
+  list-style: none;
 }
 
 /*estilos personalizados*/
-.midlaner {background-color: #eeeeee}
-.toplaner {background-color: #ffea00}
+.midlaner {
+  background-color: #eeeeee;
+}
+.toplaner {
+  background-color: #ffea00;
+}
+.messageEmail {
+  color: blue;
+  text-decoration: bold;
+}
+.messageDate {
+  color: brown;
+}
+.messageText {
+  color: green;
+  font-style: italic;
+}

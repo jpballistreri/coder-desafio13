@@ -3,6 +3,7 @@ import path from "path";
 import routerApi from "./routes/api.js";
 import web from "./routes/web.js";
 import fs from "fs";
+import moment from "moment";
 
 import * as http from "http";
 import io from "socket.io";
@@ -57,13 +58,94 @@ myWSServer.on("connection", function (socket) {
           console.log(`ID DEL SOCKET DEL SERVER => ${socket.id}`);
           const arrayProductos = JSON.parse(data);
           //console.log(arrayProductos);
-          myWSServer.emit("listaProductos", arrayProductos);
+          myWSServer.emit("array-productos", arrayProductos);
         }
       }
     );
   });
 
-  socket.on("askData", () => {
+  socket.on("nuevo-mensaje", (email, texto) => {
+    console.log("Nuevo Mensaje!");
+    console.log(email);
+    console.log(texto);
+
+    function validateEmail(email) {
+      const re = /\S+@\S+\.\S+/;
+      return re.test(email);
+    }
+
+    if (validateEmail(email) == false) {
+      myWSServer.emit("mensaje-error", {
+        msj: "Por favor, ingrese un Email válido.",
+      });
+    } else {
+      ////Guarda mensaje
+      const data = fs.readFile(
+        "./mensajes.json",
+        "utf-8",
+        async function (err, data) {
+          if (err) {
+            if (err.errno == -2) {
+              //Si el archivo no existe, se crea con el nuevo mensaje
+              let arrayMensajes = JSON.parse("[\n]");
+
+              const nuevoMensaje = {
+                email: email,
+                date: `${moment()
+                  .subtract(10, "days")
+                  .calendar()} ${moment().format("LTS")}`,
+                texto: texto,
+              };
+
+              arrayMensajes.push(nuevoMensaje);
+
+              //Guarda el archivo nuevo con el Mensaje
+              fs.writeFile(
+                "./mensajes.json",
+                JSON.stringify(arrayMensajes, null, "\t"),
+                (err) => {
+                  if (err) {
+                    return res.status(400).json({
+                      msj: err,
+                    });
+                  }
+                  myWSServer.emit("mensaje-enviado", arrayMensajes);
+                }
+              );
+            }
+          }
+          //Si el archivo existe...
+          else {
+            let arrayMensajes = JSON.parse(data);
+            const nuevoMensaje = {
+              email: email,
+              date: `${moment()
+                .subtract(10, "days")
+                .calendar()} ${moment().format("LTS")}`,
+              texto: texto,
+            };
+            arrayMensajes.push(nuevoMensaje);
+            //Guarda el archivo nuevo con el mensaje
+            fs.writeFile(
+              "./mensajes.json",
+              JSON.stringify(arrayMensajes, null, "\t"),
+              (err) => {
+                if (err) {
+                  return res.status(400).json({
+                    msj: err,
+                  });
+                }
+                console.log(arrayMensajes);
+                myWSServer.emit("mensaje-enviado", arrayMensajes);
+              }
+            );
+          }
+        }
+      );
+    }
+  });
+
+  socket.on("get-productos", () => {
     const productos = fs.readFile(
       "./productos.json",
       "utf-8",
@@ -74,9 +156,19 @@ myWSServer.on("connection", function (socket) {
         }
 
         const arrayProductos = JSON.parse(data);
-        socket.emit("listaProductos", arrayProductos);
+        socket.emit("array-productos", arrayProductos);
       }
     );
     console.log("ME LLEGO DATA");
+  });
+
+  socket.on("get-mensajes", () => {
+    const mensajes = fs.readFile("./mensajes.json", "utf-8", (err, data) => {
+      if (err) {
+        return [];
+      }
+      const arrayMensajes = JSON.parse(data);
+      socket.emit("array-mensajes", arrayMensajes);
+    });
   });
 });
