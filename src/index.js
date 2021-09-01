@@ -4,6 +4,7 @@ import routerApi from "./routes/api.js";
 import web from "./routes/web.js";
 import fs from "fs";
 import moment from "moment";
+import { DBService } from "./services/db";
 
 import * as http from "http";
 import io from "socket.io";
@@ -43,26 +44,31 @@ myWSServer.on("connection", function (socket) {
   console.log(`ID DEL SOCKET DEL CLIENTE => ${socket.client.id}`);
   console.log(`ID DEL SOCKET DEL SERVER => ${socket.id}`);
 
-  socket.on("nuevo-producto", () => {
-    console.log("nuevo producto!!!");
-    const productos = fs.readFile(
-      "./productos.json",
-      "utf-8",
-      async function (err, data) {
-        if (err) {
-          console.log(err);
-          return [];
-        } else {
-          console.log("\n\nUn cliente ha ingresado un producto");
-          console.log(`ID DEL SOCKET DEL CLIENTE => ${socket.client.id}`);
-          console.log(`ID DEL SOCKET DEL SERVER => ${socket.id}`);
-          const arrayProductos = JSON.parse(data);
-          //console.log(arrayProductos);
-          myWSServer.emit("array-productos", arrayProductos);
-        }
-      }
-    );
+  socket.on("nuevo-producto", async () => {
+    console.log("Nuevo Producto!");
+    const productos = await DBService.get("productos");
+    myWSServer.emit("array-productos", productos);
   });
+  //socket.on("nuevo-producto", () => {
+  //  console.log("nuevo producto!!!");
+  //  const productos = fs.readFile(
+  //    "./productos.json",
+  //    "utf-8",
+  //    async function (err, data) {
+  //      if (err) {
+  //        console.log(err);
+  //        return [];
+  //      } else {
+  //        console.log("\n\nUn cliente ha ingresado un producto");
+  //        console.log(`ID DEL SOCKET DEL CLIENTE => ${socket.client.id}`);
+  //        console.log(`ID DEL SOCKET DEL SERVER => ${socket.id}`);
+  //        const arrayProductos = JSON.parse(data);
+  //        //console.log(arrayProductos);
+  //        myWSServer.emit("array-productos", arrayProductos);
+  //      }
+  //    }
+  //  );
+  //});
 
   socket.on("nuevo-mensaje", (email, texto) => {
     function validateEmail(email) {
@@ -141,21 +147,25 @@ myWSServer.on("connection", function (socket) {
     }
   });
 
-  socket.on("get-productos", () => {
-    const productos = fs.readFile(
-      "./productos.json",
-      "utf-8",
-      function (err, data) {
-        if (err) {
-          console.log(err);
-          return [];
-        }
-
-        const arrayProductos = JSON.parse(data);
-        socket.emit("array-productos", arrayProductos);
-      }
-    );
-    console.log("ME LLEGO DATA");
+  //socket.on("get-productos", () => {
+  //  const productos = fs.readFile(
+  //    "./productos.json",
+  //    "utf-8",
+  //    function (err, data) {
+  //      if (err) {
+  //        console.log(err);
+  //        return [];
+  //      }
+  //
+  //      const arrayProductos = JSON.parse(data);
+  //      socket.emit("array-productos", arrayProductos);
+  //    }
+  //  );
+  //  console.log("ME LLEGO DATA");
+  //});
+  socket.on("get-productos", async () => {
+    const productos = await DBService.get("productos");
+    socket.emit("array-productos", productos);
   });
 
   socket.on("get-mensajes", () => {

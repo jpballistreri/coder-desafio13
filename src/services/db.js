@@ -1,6 +1,8 @@
 import knex from "knex";
 import dbConfig from "../../knexfile";
 
+console.log(dbConfig["development_sqlite3"]);
+
 class DB {
   constructor() {
     const environment = process.env.NODE_ENV || "development";
