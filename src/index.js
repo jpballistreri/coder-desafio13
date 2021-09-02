@@ -2,16 +2,14 @@ import express from "express";
 import path from "path";
 import routerApi from "./routes/api.js";
 import web from "./routes/web.js";
-import fs from "fs";
 import moment from "moment";
-import { DBService } from "./services/db";
+import { DBService, DBMensajesSqlite } from "./services/db";
 
 import * as http from "http";
 import io from "socket.io";
 
-const util = require("util");
-
 DBService.init();
+DBMensajesSqlite.init();
 
 /** INICIALIZACION API con EXPRESS */
 const app = express();
@@ -51,28 +49,8 @@ myWSServer.on("connection", function (socket) {
     const productos = await DBService.get("productos");
     myWSServer.emit("array-productos", productos);
   });
-  //socket.on("nuevo-producto", () => {
-  //  console.log("nuevo producto!!!");
-  //  const productos = fs.readFile(
-  //    "./productos.json",
-  //    "utf-8",
-  //    async function (err, data) {
-  //      if (err) {
-  //        console.log(err);
-  //        return [];
-  //      } else {
-  //        console.log("\n\nUn cliente ha ingresado un producto");
-  //        console.log(`ID DEL SOCKET DEL CLIENTE => ${socket.client.id}`);
-  //        console.log(`ID DEL SOCKET DEL SERVER => ${socket.id}`);
-  //        const arrayProductos = JSON.parse(data);
-  //        //console.log(arrayProductos);
-  //        myWSServer.emit("array-productos", arrayProductos);
-  //      }
-  //    }
-  //  );
-  //});
 
-  socket.on("nuevo-mensaje", (email, texto) => {
+  socket.on("nuevo-mensaje", async (email, texto) => {
     function validateEmail(email) {
       const re = /\S+@\S+\.\S+/;
       return re.test(email);
@@ -84,99 +62,26 @@ myWSServer.on("connection", function (socket) {
       });
     } else {
       ////Guarda mensaje
-      const data = fs.readFile(
-        "./mensajes.json",
-        "utf-8",
-        async function (err, data) {
-          if (err) {
-            if (err.errno == -2) {
-              //Si el archivo no existe, se crea con el nuevo mensaje
-              let arrayMensajes = JSON.parse("[\n]");
-
-              const nuevoMensaje = {
-                email: email,
-                date: `${moment()
-                  .subtract(10, "days")
-                  .calendar()} ${moment().format("LTS")}`,
-                texto: texto,
-              };
-
-              arrayMensajes.push(nuevoMensaje);
-
-              //Guarda el archivo nuevo con el Mensaje
-              fs.writeFile(
-                "./mensajes.json",
-                JSON.stringify(arrayMensajes, null, "\t"),
-                (err) => {
-                  if (err) {
-                    return res.status(400).json({
-                      msj: err,
-                    });
-                  }
-                  myWSServer.emit("mensaje-enviado", arrayMensajes);
-                }
-              );
-            }
-          }
-          //Si el archivo existe...
-          else {
-            let arrayMensajes = JSON.parse(data);
-            const nuevoMensaje = {
-              email: email,
-              date: `${moment()
-                .subtract(10, "days")
-                .calendar()} ${moment().format("LTS")}`,
-              texto: texto,
-            };
-            arrayMensajes.push(nuevoMensaje);
-            //Guarda el archivo nuevo con el mensaje
-            fs.writeFile(
-              "./mensajes.json",
-              JSON.stringify(arrayMensajes, null, "\t"),
-              (err) => {
-                if (err) {
-                  return res.status(400).json({
-                    msj: err,
-                  });
-                }
-                console.log(arrayMensajes);
-                myWSServer.emit("mensaje-enviado", arrayMensajes);
-              }
-            );
-          }
-        }
-      );
+      const nuevoMensaje = {
+        email: email,
+        date: `${moment().subtract(10, "days").calendar()} ${moment().format(
+          "LTS"
+        )}`,
+        texto: texto,
+      };
+      await DBMensajesSqlite.create("mensajes", nuevoMensaje);
+      const arrayMensajes = await DBMensajesSqlite.get("mensajes");
+      myWSServer.emit("array-mensajes", arrayMensajes);
     }
   });
 
-  //socket.on("get-productos", () => {
-  //  const productos = fs.readFile(
-  //    "./productos.json",
-  //    "utf-8",
-  //    function (err, data) {
-  //      if (err) {
-  //        console.log(err);
-  //        return [];
-  //      }
-  //
-  //      const arrayProductos = JSON.parse(data);
-  //      socket.emit("array-productos", arrayProductos);
-  //    }
-  //  );
-  //  console.log("ME LLEGO DATA");
-  //});
   socket.on("get-productos", async () => {
     const productos = await DBService.get("productos");
     socket.emit("array-productos", productos);
   });
 
-  socket.on("get-mensajes", () => {
-    const mensajes = fs.readFile("./mensajes.json", "utf-8", (err, data) => {
-      if (err) {
-        return [];
-      }
-      const arrayMensajes = JSON.parse(data);
-      socket.emit("array-mensajes", arrayMensajes);
-    });
+  socket.on("get-mensajes", async () => {
+    const mensajes = await DBMensajesSqlite.get("mensajes");
+    socket.emit("array-mensajes", mensajes);
   });
 });

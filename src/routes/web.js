@@ -1,22 +1,13 @@
 import express from "express";
 import fs from "fs";
+import { DBService } from "../services/db";
 
 const router = express.Router();
 
-router.get("/vista", (req, res) => {
-  const arrayProductos = fs.readFile(
-    "./productos.json",
-    "utf-8",
-    function (err, data) {
-      if (err) {
-        return res.render("main", { productos: [] });
-      }
+router.get("/vista", async (req, res) => {
+  const arrayProductos = await DBService.get("productos");
 
-      let arrayProductos = JSON.parse(data);
-      let test = { productos: arrayProductos };
-      res.render("main", test);
-    }
-  );
+  res.render("main", arrayProductos);
 });
 
 router.get("/ingreso", (req, res) => {

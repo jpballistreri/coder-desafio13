@@ -56,7 +56,7 @@ socket.on("array-productos", function (data) {
   console.log(data);
   renderProductos(data);
 });
-socket.on("array-mensajes", function (data) {
+socket.on("array-mensajes", (data) => {
   console.log("RECIBI MENSAJES");
   console.log(data);
   renderMensajes(data);
@@ -64,21 +64,6 @@ socket.on("array-mensajes", function (data) {
 socket.on("mensaje-error", (res) => {
   alert(res.msj);
 });
-socket.on("mensaje-enviado", (data) => {
-  renderMensajes(data);
-});
-
-//////////////////////77
-////FORMULARIO DE INGRESO PRODUCTO
-
-//function limpiarMsjIngresoProducto() {
-//  var mensaje = document.getElementById("msjIngresoProducto");
-//
-//  setTimeout(() => {
-//    socket.emit("nuevo-producto");
-//    mensaje.textContent = "";
-//  }, 1500);
-//}
 
 function enviarFormulario(e) {
   e.preventDefault();
