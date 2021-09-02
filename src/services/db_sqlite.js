@@ -1,32 +1,30 @@
 import knex from "knex";
 import dbConfig from "../../knexfile";
 
+//console.log(dbConfig["development_sqlite3"]);
+
 class DB {
   constructor() {
-    const environment = "development_sqlite3";
+    const environment = process.env.NODE_ENV || "development_sqlite3";
     console.log(`SETTING ${environment} DB`);
     const options = dbConfig[environment];
     this.connection = knex(options);
-    console.log(options);
   }
 
   init() {
-    console.log("cargando base");
     this.connection.schema.hasTable("productos").then((exists) => {
-      if (!exists) {
-        console.log("Creamos la tabla productos!");
+      if (exists) return;
+      console.log("Creamos la tabla productos!");
 
-        this.connection.schema
-          .createTable("productos", (productosTable) => {
-            productosTable.increments("id");
-            productosTable.string("title").notNullable();
-            productosTable.integer("price").notNullable();
-            productosTable.string("thumbnail").notNullable();
-          })
-          .then(() => {
-            console.log("Done");
-          });
-      }
+      return this.connection.schema.createTable(
+        "productos",
+        (productosTable) => {
+          productosTable.increments();
+          productosTable.string("title").notNullable();
+          productosTable.integer("price").notNullable();
+          productosTable.string("thumbnail").notNullable();
+        }
+      );
     });
   }
 
@@ -58,4 +56,4 @@ class DB {
   //}
 }
 
-export const DBService = new DB();
+export const Sqlite3DBService = new DB();

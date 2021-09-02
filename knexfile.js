@@ -19,11 +19,9 @@ module.exports = {
   development_sqlite3: {
     client: "sqlite3",
     connection: {
-      host: "127.0.0.1",
-      user: "root",
-      password: "coderhouse",
-      database: "productos",
+      filename: "./mensajesSQLite",
     },
+    useNullAsDefault: true,
     migrations: {
       directory: __dirname + "/db/migrations",
     },

@@ -11,6 +11,8 @@ import io from "socket.io";
 
 const util = require("util");
 
+DBService.init();
+
 /** INICIALIZACION API con EXPRESS */
 const app = express();
 const puerto = 8080;

@@ -7,9 +7,9 @@
     "transpile": "babel src --out-dir dist",
     "start": "node ./dist/index.js",
     "dev": "nodemon --exec babel-node ./src/index.js",
-    "migrate:db": ".\\node_modules\\.bin\\knex migrate:latest --env development",
-    "rollback:db": ".\\node_modules\\.bin\\knex migrate:rollback --env development",
-    "seed:db": ".\\node_modules\\.bin\\knex seed:run --env development",
+    "migrate:db": ".\\node_modules\\.bin\\knex migrate:latest --env development_sqlite3",
+    "rollback:db": ".\\node_modules\\.bin\\knex migrate:rollback --env development_sqlite3",
+    "seed:db": ".\\node_modules\\.bin\\knex seed:run --env development_sqlite3",
     "iniciar:db":"npm run rollback:db && npm run migrate:db && npm run seed:db",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
